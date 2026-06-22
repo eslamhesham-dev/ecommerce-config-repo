@@ -1,0 +1,9 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: inventory-service
+
+service:
+  message: Inventory service loaded from Github repository
