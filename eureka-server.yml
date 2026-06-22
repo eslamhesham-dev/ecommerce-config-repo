@@ -14,7 +14,7 @@ management:
   endpoints:
     web:
       exposure:
-        health, info
+        health,info
 
 service:
   message: Eureka server config loaded from Github
