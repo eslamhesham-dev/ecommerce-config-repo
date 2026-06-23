@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: product-service-route
+              uri: lb://product-service
+              predicates: path=/api/products/**
+                - StripPrefix=1s
+            - id: inventory-service-route
+              uri: lb://inventory-service
+              predicates: path=/api/inventory/**
+              filters:
+                - StripPrefix=1
+server:
+  port: 8080
+
+
+
+service:
+  message: API-Gateway loaded from Github repository
+
+eureka:
+  client:
+    server-url:
+      defaultZone: http://localhost:8761/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
