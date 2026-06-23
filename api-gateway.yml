@@ -6,11 +6,14 @@ spring:
           routes:
             - id: product-service-route
               uri: lb://product-service
-              predicates: path=/api/products/**
-                - StripPrefix=1s
+              predicates:
+                - Path=/api/products/**
+              filters:
+                - StripPrefix=1
             - id: inventory-service-route
               uri: lb://inventory-service
-              predicates: path=/api/inventory/**
+              predicates:
+                - Path=/api/inventory/**
               filters:
                 - StripPrefix=1
 server:
@@ -21,7 +24,7 @@ service:
 
 eureka:
   client:
-    server-url:
+    service-url:
       defaultZone: http://localhost:8761/eureka
 
 management:
