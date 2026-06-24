@@ -11,7 +11,7 @@ spring:
         webflux:
           routes:
             - id: product-service-route
-              uri: lb://PRODUCT-SERVICE
+              uri: lb://product-service
               predicates:
                 - Path=/api/products,/api/products/**
               filters:
