@@ -7,20 +7,22 @@ service:
 spring:
   cloud:
     gateway:
-      routes:
-        - id: product-service-route
-          uri: lb://product-service
-          predicates:
-            - Path=/api/products/**
-          filters:
-            - StripPrefix=1
+      server:
+        webflux:
+          routes:
+            - id: product-service-route
+              uri: lb://product-service
+              predicates:
+                - Path=/api/products,/api/products/**
+              filters:
+                - StripPrefix=1
 
-        - id: inventory-service-route
-          uri: lb://inventory-service
-          predicates:
-            - Path=/api/inventory/**
-          filters:
-            - StripPrefix=1
+            - id: inventory-service-route
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/inventory,/api/inventory/**
+              filters:
+                - StripPrefix=1
 
 eureka:
   client:
@@ -31,4 +33,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,gateway
