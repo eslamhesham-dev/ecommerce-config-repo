@@ -10,6 +10,7 @@ spring:
                 - Path=/api/products/**
               filters:
                 - StripPrefix=1
+                - AddResponseHeader=X-Platform, microservices-pro
             - id: inventory-service-route
               uri: lb://inventory-service
               predicates:
