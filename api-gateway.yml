@@ -16,13 +16,18 @@ spring:
                 - Path=/api/products/**
               filters:
                 - StripPrefix=1
+                - AddResponseHeader=X-Platform, microservices-pro
 
             - id: inventory-service-route
               uri: lb://inventory-service
               predicates:
                 - Path=/api/inventory/**
+                - AddResponseHeader=X-Platform, microservices-pro
               filters:
                 - StripPrefix=1
+
+jwt:
+  secret: my-super-secret-key-for-jwt-authentication-123456
 
 eureka:
   client:
