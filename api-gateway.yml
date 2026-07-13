@@ -2,44 +2,56 @@ server:
   port: 8080
 
 service:
-  message: API Gateway2 loaded from Github config repo
+  message: API Gateway loaded from Github config repo
 
 spring:
-  # 1. ADDED REDIS CONFIGURATION FOR TRACKING THE LIMITS
   data:
     redis:
       host: localhost
       port: 6379
+
   cloud:
     gateway:
-      routes: # Corrected from server.webflux.routes
+      routes:
         - id: product-service-route
           uri: lb://product-service
           predicates:
             - Path=/api/products,/api/products/**
           filters:
-            - StripPrefix=1
-            - AddResponseHeader=X-Platform, microservices-pro
-            # 2. ADDED RATE LIMITER FILTER FOR PRODUCT SERVICE
             - name: RequestRateLimiter
               args:
+                key-resolver: "#{@userKeyResolver}"
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
-                key-resolver: "#{@userKeyResolver}"
-
+                redis-rate-limiter.requestedTokens: 1
+            - StripPrefix=1
+            - AddResponseHeader=X-Platform, microservices-pro
         - id: inventory-service-route
           uri: lb://inventory-service
           predicates:
             - Path=/api/inventory,/api/inventory/**
           filters:
-            - StripPrefix=1
-            - AddResponseHeader=X-Platform, microservices-pro
-            # 3. ADDED RATE LIMITER FILTER FOR INVENTORY SERVICE
             - name: RequestRateLimiter
               args:
+                key-resolver: "#{@userKeyResolver}"
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+            - StripPrefix=1
+            - AddResponseHeader=X-Platform, microservices-pro
+        - id: order-service-route
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders,/api/orders/**
+          filters:
+            - name: RequestRateLimiter
+              args:
                 key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+            - StripPrefix=1
+            - AddResponseHeader=X-Platform, microservices-pro
 
 jwt:
   secret: ${JWT_SECRET:my-super-secret-key-for-jwt-authentication-123456}
@@ -50,6 +62,9 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
 
 management:
+  endpoint:
+    gateway:
+      access: read-only
   endpoints:
     web:
       exposure:
