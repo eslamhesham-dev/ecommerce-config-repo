@@ -56,3 +56,16 @@ resilience4j:
       paymentService:
         timeout-duration: 2s         # fail if Payment takes > 2 seconds
         cancel-running-future: true  # cancel the thread on timeout
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+app:
+  kafka:
+    topics:
+      order-created: order-created
