@@ -30,9 +30,11 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
       properties:
-        # Inventory publishes InventoryReservedEvent,
-        # InventoryReservationFailedEvent and InventoryReleasedEvent.
         spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+          inventoryReserved:com.microservices.pro.inventoryservice.events.InventoryReservedEvent,
+          inventoryReservationFailed:com.microservices.pro.inventoryservice.events.InventoryReservationFailedEvent,
+          inventoryReleased:com.microservices.pro.inventoryservice.events.InventoryReleasedEvent
 
     consumer:
       group-id: inventory-service
