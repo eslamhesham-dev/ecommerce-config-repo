@@ -35,15 +35,14 @@ spring:
         spring.json.add.type.headers: true
 
     consumer:
+      group-id: inventory-service
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
 
       properties:
         spring.json.trusted.packages: "com.microservices.pro.*"
-
-        # Converts the type token sent by Order Service
-        # into Inventory Service's local event class.
         spring.json.type.mapping: >
-          orderPlaced:com.microservices.pro.inventoryservice.events.OrderPlacedEvent
-
-      auto-offset-reset: earliest
+          orderPlaced:com.microservices.pro.inventoryservice.events.OrderPlacedEvent,
+          paymentCompleted:com.microservices.pro.inventoryservice.events.PaymentCompletedEvent,
+          paymentFailed:com.microservices.pro.inventoryservice.events.PaymentFailedEvent
