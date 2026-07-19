@@ -2,12 +2,12 @@ server:
   port: 8082
 
 service:
-  message: Order service loaded from Github repository
+  message: Order service loaded from GitHub repository
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
@@ -15,57 +15,66 @@ management:
   health:
     circuitbreakers:
       enabled: true
+
+  endpoint:
+    health:
+      show-details: always
+
   endpoints:
     web:
       exposure:
-        include: health,circuitbreakers,bulkheads,retries
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents,retries,retryevents,bulkheads,bulkheadevents,timelimiters,timelimiterevents
 
 resilience4j:
   circuitbreaker:
     instances:
       paymentService:
         sliding-window-type: COUNT_BASED
-        sliding-window-size: 10          # track last 10 calls
-        failure-rate-threshold: 50        # open if 50%+ fail
-        wait-duration-in-open-state: 5s  # wait 5s before HALF-OPEN
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
-        register-health-indicator: true  # expose via Actuator
+        register-health-indicator: true
 
   retry:
     instances:
       paymentService:
-        max-attempts: 3             # try 3 times total
-        wait-duration: 500ms        # wait 500ms between attempts
+        max-attempts: 3
+        wait-duration: 500ms
         enable-exponential-backoff: true
-        exponential-backoff-multiplier: 2  # 500ms → 1s → 2s
+        exponential-backoff-multiplier: 2
         retry-exceptions:
-          - java.lang.RuntimeException   # only retry on these
+          - java.lang.RuntimeException
         ignore-exceptions:
-          - java.lang.IllegalArgumentException  # never retry on these
+          - java.lang.IllegalArgumentException
 
-  # Session 5 — added below
   bulkhead:
     instances:
       paymentService:
-        max-concurrent-calls: 10    # max 10 simultaneous calls to Payment
-        max-wait-duration: 0ms      # do NOT wait — fail immediately if full
+        max-concurrent-calls: 10
+        max-wait-duration: 0ms
 
   timelimiter:
     instances:
       paymentService:
-        timeout-duration: 2s         # fail if Payment takes > 2 seconds
-        cancel-running-future: true  # cancel the thread on timeout
+        timeout-duration: 2s
+        cancel-running-future: true
 
 spring:
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+      properties:
+        spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+          orderPlaced:com.microservices.pro.orderservice.event.OrderPlacedEvent
+
 app:
   kafka:
     topics:
-      order-created: order-created
+      order-events: order-events

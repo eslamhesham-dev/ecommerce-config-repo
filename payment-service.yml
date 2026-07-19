@@ -2,23 +2,63 @@ server:
   port: 8084
 
 service:
-  message: Payment service loaded from Github repository
+  message: Payment service loaded from GitHub repository
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     prefer-ip-address: true
 
 management:
+  endpoint:
+    health:
+      show-details: always
+
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
 
 payment:
-  failure-rate: 0.5  # 50% failure — change to 0.0 to test recovery (Session 4)
-  delay-ms: 0         # 0 = no artificial delay. Session 5 demo sets this to
-    # 3000 (3s) to trigger the 2s TimeLimiter on Order Service.
-  # DEV ONLY — this is a test knob, never a real payment gateway setting.
+  # Used by both synchronous REST payment and asynchronous Saga payment.
+  # Set to 0.0 to force success.
+  # Set to 1.0 to force failure.
+  failure-rate: 0.5
+
+  # Used by the synchronous REST controller only.
+  # Set to 3000 to trigger Order Service's 2-second TimeLimiter.
+  delay-ms: 0
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        spring.json.add.type.headers: true
+
+        # Events published by Payment Service.
+        spring.json.type.mapping: >
+          paymentCompleted:com.microservices.pro.paymentservice.events.PaymentCompletedEvent,
+          paymentFailed:com.microservices.pro.paymentservice.events.PaymentFailedEvent
+
+    consumer:
+      group-id: payment-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+
+      properties:
+        spring.json.trusted.packages: "com.microservices.pro.*"
+
+        # inventory-events contains multiple event types, so Payment Service
+        # must know how to deserialize every possible type on that topic.
+        spring.json.type.mapping: >
+          inventoryReserved:com.microservices.pro.paymentservice.events.InventoryReservedEvent,
+          inventoryReservationFailed:com.microservices.pro.paymentservice.events.InventoryReservationFailedEvent,
+          inventoryReleased:com.microservices.pro.paymentservice.events.InventoryReleasedEvent

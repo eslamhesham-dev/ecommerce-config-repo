@@ -1,10 +1,49 @@
 server:
   port: 8083
 
+service:
+  message: Inventory service loaded from GitHub repository
+
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
 
-service:
-  message: Inventory service loaded from Github repository
+management:
+  endpoint:
+    health:
+      show-details: always
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        # Inventory publishes InventoryReservedEvent,
+        # InventoryReservationFailedEvent and InventoryReleasedEvent.
+        spring.json.add.type.headers: true
+
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        spring.json.trusted.packages: "com.microservices.pro.*"
+
+        # Converts the type token sent by Order Service
+        # into Inventory Service's local event class.
+        spring.json.type.mapping: >
+          orderPlaced:com.microservices.pro.inventoryservice.events.OrderPlacedEvent
+
+      auto-offset-reset: earliest
