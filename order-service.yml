@@ -62,6 +62,20 @@ resilience4j:
         cancel-running-future: true
 
 spring:
+  datasource:
+    url: ${ORDER_DB_URL:jdbc:postgresql://localhost:5432/order_service_db}
+    username: ${ORDER_DB_USERNAME:postgres}
+    password: ${ORDER_DB_PASSWORD:0000}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
@@ -73,6 +87,24 @@ spring:
         spring.json.add.type.headers: true
         spring.json.type.mapping: >
           orderPlaced:com.microservices.pro.orderservice.event.OrderPlacedEvent
+
+    consumer:
+      group-id: order-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+
+      properties:
+        spring.json.trusted.packages: "com.microservices.pro.*"
+        spring.json.type.mapping: >
+          inventoryReserved:com.microservices.pro.orderservice.event.InventoryReservedEvent,
+          inventoryReservationFailed:com.microservices.pro.orderservice.event.InventoryReservationFailedEvent,
+          inventoryReleased:com.microservices.pro.orderservice.event.InventoryReleasedEvent,
+          paymentCompleted:com.microservices.pro.orderservice.event.PaymentCompletedEvent,
+          paymentFailed:com.microservices.pro.orderservice.event.PaymentFailedEvent
+
+    listener:
+      missing-topics-fatal: false
 
 app:
   kafka:
