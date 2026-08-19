@@ -7,16 +7,20 @@ service:
 spring:
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
   cloud:
     gateway:
       routes:
+
+        # =========================
+        # Product Service
+        # =========================
         - id: product-service-route
           uri: lb://product-service
           predicates:
-            - Path=/api/products,/api/products/**
+            - Path=/api/v1/products,/api/v1/products/**
           filters:
             - name: RequestRateLimiter
               args:
@@ -24,12 +28,15 @@ spring:
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
                 redis-rate-limiter.requestedTokens: 1
-            - StripPrefix=1
             - AddResponseHeader=X-Platform, microservices-pro
+
+        # =========================
+        # Inventory Service
+        # =========================
         - id: inventory-service-route
           uri: lb://inventory-service
           predicates:
-            - Path=/api/inventory,/api/inventory/**
+            - Path=/api/v1/inventory,/api/v1/inventory/**
           filters:
             - name: RequestRateLimiter
               args:
@@ -37,8 +44,11 @@ spring:
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
                 redis-rate-limiter.requestedTokens: 1
-            - StripPrefix=1
             - AddResponseHeader=X-Platform, microservices-pro
+
+        # =========================
+        # Order Service
+        # =========================
         - id: order-service-route
           uri: lb://order-service
           predicates:
@@ -50,7 +60,6 @@ spring:
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
                 redis-rate-limiter.requestedTokens: 1
-            - StripPrefix=1
             - AddResponseHeader=X-Platform, microservices-pro
 
 jwt:
@@ -59,12 +68,13 @@ jwt:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
 management:
   endpoint:
     gateway:
       access: read-only
+
   endpoints:
     web:
       exposure:
